@@ -1,6 +1,6 @@
 extends CharacterBody2D
 
-@export var speed = 140.0
+@export var speed = 140.0 * 60 # Physic Updates
 @export var climbSpeed = 80.0
 @export var jumpVelocity = -250.0
 @export var jumpBufferTime = 0.1
@@ -10,10 +10,10 @@ extends CharacterBody2D
 
 @onready var coyoteTimer = $CoyoteTimer
 @onready var groundDetector = $GroundDetector
-@onready var bottomRightCast = $BottomRightCast
-@onready var topRightCast = $TopRightCast
-@onready var bottomLeftCast = $BottomLeftCast
-@onready var topLeftCast = $TopLeftCast
+@onready var bottomRightCast = $NudgeCasts/BottomRightCast
+@onready var topRightCast = $NudgeCasts/TopRightCast
+@onready var bottomLeftCast = $NudgeCasts/BottomLeftCast
+@onready var topLeftCast = $NudgeCasts/TopLeftCast
 
 var jumpBuffered = false
 
@@ -85,10 +85,10 @@ func reset_jump_buffer():
 func handle_movement(delta):
 	var hor_dir = Input.get_axis("move_left", "move_right")
 	if hor_dir:
-		velocity.x = hor_dir * speed
+		velocity.x = hor_dir * speed * delta
 	else:
 		# Slows down player, only relevant when additional forces are applied
-		velocity.x = move_toward(velocity.x, 0, speed)
+		velocity.x = move_toward(velocity.x, 0, speed * delta)
 
 func update_coyote_data():
 	# Check if just left floor after move_and_slide()

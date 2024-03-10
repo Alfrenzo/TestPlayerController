@@ -23,12 +23,10 @@ scale = Vector2(1, 2)
 texture = ExtResource("2_bthlq")
 
 [node name="Collider" type="CollisionShape2D" parent="."]
-visible = false
 position = Vector2(0, 1)
 shape = SubResource("RectangleShape2D_wy7b0")
 
 [node name="GroundDetector" type="Area2D" parent="."]
-visible = false
 collision_mask = 2
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="GroundDetector"]
@@ -36,7 +34,7 @@ position = Vector2(0, 16.5)
 shape = SubResource("RectangleShape2D_2ym71")
 
 [node name="WallDetector" type="Area2D" parent="."]
-visible = false
+collision_mask = 2
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="WallDetector"]
 shape = SubResource("RectangleShape2D_1rbpf")
@@ -45,27 +43,40 @@ shape = SubResource("RectangleShape2D_1rbpf")
 wait_time = 0.1
 one_shot = true
 
-[node name="BottomRightCast" type="RayCast2D" parent="."]
-position = Vector2(7, 16)
-target_position = Vector2(1, 0)
-
-[node name="TopRightCast" type="RayCast2D" parent="."]
-position = Vector2(7, 12)
-target_position = Vector2(1, 0)
-
-[node name="BottomLeftCast" type="RayCast2D" parent="."]
-position = Vector2(-7, 16)
-target_position = Vector2(-1, 0)
-
-[node name="TopLeftCast" type="RayCast2D" parent="."]
-position = Vector2(-7, 12)
-target_position = Vector2(-1, 0)
-
 [node name="Hitbox" type="Area2D" parent="."]
-visible = false
 collision_mask = 4
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Hitbox"]
 shape = SubResource("RectangleShape2D_ik6fm")
+
+[node name="NudgeCasts" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="BottomRightCast" type="RayCast2D" parent="NudgeCasts"]
+position = Vector2(7, 16)
+exclude_parent = false
+target_position = Vector2(1, 0)
+collision_mask = 2
+
+[node name="TopRightCast" type="RayCast2D" parent="NudgeCasts"]
+position = Vector2(7, 12)
+exclude_parent = false
+target_position = Vector2(1, 0)
+collision_mask = 2
+
+[node name="BottomLeftCast" type="RayCast2D" parent="NudgeCasts"]
+position = Vector2(-7, 16)
+exclude_parent = false
+target_position = Vector2(-1, 0)
+collision_mask = 2
+
+[node name="TopLeftCast" type="RayCast2D" parent="NudgeCasts"]
+position = Vector2(-7, 12)
+exclude_parent = false
+target_position = Vector2(-1, 0)
+collision_mask = 2
 
 [connection signal="body_entered" from="Hitbox" to="." method="_on_spiked_entered"]
