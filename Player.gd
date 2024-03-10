@@ -27,10 +27,9 @@ var wasOnFloor = false
 var gravity = ProjectSettings.get_setting("physics/2d/default_gravity")
 var checkpoint = Vector2.ZERO
 
-#test
+
 func _ready():
 	checkpoint = global_position
-	var dothis = true
 
 func _physics_process(delta):
 	apply_gravity(delta)
