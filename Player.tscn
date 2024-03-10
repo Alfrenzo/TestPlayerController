@@ -1,0 +1,71 @@
+[gd_scene load_steps=7 format=3 uid="uid://c7qul0v1t2mts"]
+
+[ext_resource type="Script" path="res://Player.gd" id="1_2opwh"]
+[ext_resource type="Texture2D" uid="uid://bvqairqeokyn3" path="res://red.png" id="2_bthlq"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_wy7b0"]
+size = Vector2(14, 30)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_2ym71"]
+size = Vector2(14, 5)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_1rbpf"]
+size = Vector2(22, 32)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ik6fm"]
+size = Vector2(12, 28)
+
+[node name="Player" type="CharacterBody2D"]
+script = ExtResource("1_2opwh")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+scale = Vector2(1, 2)
+texture = ExtResource("2_bthlq")
+
+[node name="Collider" type="CollisionShape2D" parent="."]
+visible = false
+position = Vector2(0, 1)
+shape = SubResource("RectangleShape2D_wy7b0")
+
+[node name="GroundDetector" type="Area2D" parent="."]
+visible = false
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="GroundDetector"]
+position = Vector2(0, 16.5)
+shape = SubResource("RectangleShape2D_2ym71")
+
+[node name="WallDetector" type="Area2D" parent="."]
+visible = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallDetector"]
+shape = SubResource("RectangleShape2D_1rbpf")
+
+[node name="CoyoteTimer" type="Timer" parent="."]
+wait_time = 0.1
+one_shot = true
+
+[node name="BottomRightCast" type="RayCast2D" parent="."]
+position = Vector2(7, 16)
+target_position = Vector2(1, 0)
+
+[node name="TopRightCast" type="RayCast2D" parent="."]
+position = Vector2(7, 12)
+target_position = Vector2(1, 0)
+
+[node name="BottomLeftCast" type="RayCast2D" parent="."]
+position = Vector2(-7, 16)
+target_position = Vector2(-1, 0)
+
+[node name="TopLeftCast" type="RayCast2D" parent="."]
+position = Vector2(-7, 12)
+target_position = Vector2(-1, 0)
+
+[node name="Hitbox" type="Area2D" parent="."]
+visible = false
+collision_mask = 4
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hitbox"]
+shape = SubResource("RectangleShape2D_ik6fm")
+
+[connection signal="body_entered" from="Hitbox" to="." method="_on_spiked_entered"]
