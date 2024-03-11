@@ -113,7 +113,7 @@ one_shot = true
 [node name="ClimbingTimer" type="Timer" parent="Timers"]
 
 [node name="WallCoyoteTimer" type="Timer" parent="Timers"]
-wait_time = 0.3
+wait_time = 0.1
 one_shot = true
 
 [node name="WallJumpPauseTimer" type="Timer" parent="Timers"]

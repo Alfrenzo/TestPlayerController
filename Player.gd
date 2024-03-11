@@ -34,7 +34,8 @@ var jumpBuffered = false
 var jumpStartTime = 0.0
 var facingDir = 1
 var wallDir = 0
-var oldWallDir = 0
+var wallJumpDir = 0
+var coyoteWallDir = 0
 
 var isTouchingWall = false
 var isGrabbingWall = false
@@ -137,11 +138,11 @@ func handle_jump_buffer():
 # Buffer will jump automatically if player touches ground soon after
 func handle_jump(delta):
 	if Input.is_action_just_pressed("jump"):
-		if abilities.has(Ability.WALL_JUMP) and isOnWall: #or wallCoyoteTimer.time_left > 0.0:
-			if wallJumpsPushAway or wallCoyoteTimer.time_left > 0.0:
-				if wallJumpTimer.time_left == 0.0:
-					oldWallDir = -wallDir
-					facingDir = oldWallDir
+		if abilities.has(Ability.WALL_JUMP) and wallJumpTimer.time_left == 0.0:
+			if wallJumpsPushAway:
+				if isOnWall:
+					wallJumpDir = -wallDir
+					facingDir = wallJumpDir
 					velocity.x = facingDir * speed * delta
 					state = State.WALL_JUMPING
 					wallJumpPauseTimer.start()
@@ -149,11 +150,39 @@ func handle_jump(delta):
 					print("wall jump")
 					wall_bounce_jump()
 					return
-				else:
-					jumpBuffered = true
-					get_tree().create_timer(jumpBufferTime).timeout.connect(reset_jump_buffer)
+				elif wallCoyoteTimer.time_left > 0.0:
+					print(-coyoteWallDir)
+					wallJumpDir = -coyoteWallDir
+					facingDir = wallJumpDir
+					velocity.x = facingDir * speed * delta
+					state = State.WALL_JUMPING
+					wallJumpPauseTimer.start()
+					wallJumpPauseTimer.wait_time = wallJumpPauseTime
+					print("coyote")
+					wall_bounce_jump()
+					return
 			else:
-				return
+				pass
+		
+		
+		#if abilities.has(Ability.WALL_JUMP) and isOnWall or wallCoyoteTimer.time_left > 0.0:
+			#if wallJumpsPushAway or wallCoyoteTimer.time_left > 0.0:
+				#if wallJumpTimer.time_left == 0.0:
+					##oldWallDir = -wallDir
+					##facingDir = oldWallDir
+					##velocity.x = facingDir * speed * delta
+					##state = State.WALL_JUMPING
+					##wallJumpPauseTimer.start()
+					##wallJumpPauseTimer.wait_time = wallJumpPauseTime
+					##print("wall jump")
+					##wall_bounce_jump()
+					#return
+				#else:
+					#pass
+					##jumpBuffered = true
+					##get_tree().create_timer(jumpBufferTime).timeout.connect(reset_jump_buffer)
+			#else:
+				#return
 			#else:
 				#attach_to_wall()
 				#wall_jump()
@@ -202,19 +231,19 @@ func update_sprite():
 func handle_movement(delta):
 	var hor_dir = Input.get_axis("move_left", "move_right")
 	
-	if oldWallDir == 1:
+	if wallJumpDir == 1:
 		wallDirSprite.flip_h = false
 	else:
 		wallDirSprite.flip_h = true
 	
-	if state != State.NORMAL and hor_dir != oldWallDir:
+	if state != State.NORMAL and hor_dir != wallJumpDir:
 		return
 	
 	if hor_dir:
 		velocity.x = hor_dir * speed * delta
 		facingDir = hor_dir
 	else:
-		if state != State.NORMAL and hor_dir != oldWallDir:
+		if state != State.NORMAL and hor_dir != wallJumpDir:
 			return
 		
 		# Slows down player, only relevant when additional forces are applied
@@ -233,10 +262,12 @@ func handle_wall_movement(delta):
 
 func update_coyote_data():
 	# Check if just left floor after move_and_slide()
+	var oldWallDir = wallDir
 	if wasOnFloor and not is_on_floor() and velocity.y >= 0:
 		coyoteTimer.start()
 	if wasOnWall and not is_near_wall() and velocity.y >= 0:
 		wallCoyoteTimer.start()
+		coyoteWallDir = oldWallDir
 
 func nudge_onto_edge():
 	if velocity.y > 0.0:
