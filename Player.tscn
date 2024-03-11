@@ -13,10 +13,10 @@ size = Vector2(14, 5)
 size = Vector2(12, 24)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1rbpf"]
-size = Vector2(3, 28)
+size = Vector2(4, 25)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_cnnbw"]
-size = Vector2(3, 28)
+size = Vector2(4, 25)
 
 [node name="Player" type="CharacterBody2D"]
 script = ExtResource("1_2opwh")
@@ -26,7 +26,6 @@ position = Vector2(0, 2)
 texture = ExtResource("2_nwh2l")
 
 [node name="Collider" type="CollisionShape2D" parent="."]
-visible = false
 position = Vector2(0, 2.5)
 shape = SubResource("RectangleShape2D_wy7b0")
 
@@ -78,7 +77,6 @@ target_position = Vector2(-1, 0)
 collision_mask = 2
 
 [node name="WallDetectors" type="Control" parent="."]
-visible = false
 layout_mode = 3
 anchors_preset = 0
 offset_right = 40.0
@@ -88,14 +86,14 @@ offset_bottom = 40.0
 collision_mask = 2
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="WallDetectors/WallDetectorRight"]
-position = Vector2(8.5, 2)
+position = Vector2(9, 2.5)
 shape = SubResource("RectangleShape2D_1rbpf")
 
 [node name="WallDetectorLeft" type="Area2D" parent="WallDetectors"]
 collision_mask = 2
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="WallDetectors/WallDetectorLeft"]
-position = Vector2(-8.5, 2)
+position = Vector2(-9, 2.5)
 shape = SubResource("RectangleShape2D_cnnbw")
 
 [node name="Timers" type="Control" parent="."]
@@ -113,5 +111,19 @@ wait_time = 0.3
 one_shot = true
 
 [node name="ClimbingTimer" type="Timer" parent="Timers"]
+
+[node name="WallCoyoteTimer" type="Timer" parent="Timers"]
+wait_time = 0.3
+one_shot = true
+
+[node name="WallJumpPauseTimer" type="Timer" parent="Timers"]
+wait_time = 0.5
+one_shot = true
+
+[node name="WallDirSprite" type="Sprite2D" parent="."]
+modulate = Color(0.27451, 1, 0.968627, 1)
+position = Vector2(0, -17.5)
+scale = Vector2(1, 0.25)
+texture = ExtResource("2_nwh2l")
 
 [connection signal="body_entered" from="Hitbox" to="." method="_on_spiked_entered"]
