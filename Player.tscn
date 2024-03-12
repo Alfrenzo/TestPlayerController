@@ -7,7 +7,7 @@
 size = Vector2(14, 27)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_2ym71"]
-size = Vector2(14, 5)
+size = Vector2(14, 3)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_ik6fm"]
 size = Vector2(12, 24)
@@ -30,11 +30,10 @@ position = Vector2(0, 2.5)
 shape = SubResource("RectangleShape2D_wy7b0")
 
 [node name="GroundDetector" type="Area2D" parent="."]
-visible = false
 collision_mask = 2
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="GroundDetector"]
-position = Vector2(0, 16.5)
+position = Vector2(0, 17.5)
 shape = SubResource("RectangleShape2D_2ym71")
 
 [node name="Hitbox" type="Area2D" parent="."]

@@ -135,10 +135,17 @@ func handle_jump_buffer():
 			jump()
 			return
 
-# Jumps if on ground, or starts buffer
+# Jumps if on ground or has coyote time
+# Wall jumps if on wall or has coyote time
+# Starts jump buffer if neither apply
+
 # Buffer will jump automatically if player touches ground soon after
 func handle_jump(delta):
 	if Input.is_action_just_pressed("jump"):
+		if isOnFloor or coyoteTimer.time_left > 0.0:
+			jump()
+			return
+		
 		if abilities.has(Ability.WALL_JUMP) and wallJumpTimer.time_left == 0.0:
 			if wallJumpsPushAway:
 				if isOnWall:
@@ -162,11 +169,8 @@ func handle_jump(delta):
 				wall_jump()
 				return
 		
-		if isOnFloor or coyoteTimer.time_left > 0.0:
-			jump()
-		else:
-			jumpBuffered = true
-			get_tree().create_timer(jumpBufferTime).timeout.connect(reset_jump_buffer)
+		jumpBuffered = true
+		get_tree().create_timer(jumpBufferTime).timeout.connect(reset_jump_buffer)
 
 func active_wall_jump_decline():
 	state = State.WALL_JUMP_DECLINE
@@ -210,6 +214,7 @@ func update_sprite():
 func handle_movement(delta):
 	var hor_dir = Input.get_axis("move_left", "move_right")
 	
+	# Stop movement going back towards wall
 	if state == State.WALL_JUMPING and hor_dir != wallJumpDir:
 		return
 	
@@ -217,6 +222,7 @@ func handle_movement(delta):
 		if state != State.WALL_JUMP_DECLINE:
 			velocity.x = hor_dir * speed * delta
 		else:
+			# Limit movement while State.WALL_JUMP_DECLINE
 			velocity.x = velocity.lerp(Vector2(hor_dir * speed * delta, velocity.y), 0.1).x
 		
 		facingDir = hor_dir
