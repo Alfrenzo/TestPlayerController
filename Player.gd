@@ -7,7 +7,7 @@ extends CharacterBody2D
 
 @export var wallJumpCooldown = 0.2
 # Time until player resumes control
-@export var wallJumpPauseTime = 0.2
+@export var wallJumpPauseTime = 0.15
 
 @export var fallMultiplier = 0.4
 @export var lowJumpMultiplier = 0.5
@@ -20,6 +20,7 @@ extends CharacterBody2D
 @onready var wallCoyoteTimer = $Timers/WallCoyoteTimer
 @onready var wallJumpTimer = $Timers/WallJumpTimer
 @onready var wallJumpPauseTimer = $Timers/WallJumpPauseTimer
+@onready var wallJumpDeclineTimer = $Timers/WallJumpDeclineTimer
 @onready var groundDetector = $GroundDetector
 @onready var wallDetectorRight = $WallDetectors/WallDetectorRight
 @onready var wallDetectorLeft = $WallDetectors/WallDetectorLeft
@@ -29,6 +30,7 @@ extends CharacterBody2D
 @onready var topLeftCast = $NudgeCasts/TopLeftCast
 
 @onready var wallDirSprite = $WallDirSprite
+@onready var timerText = $TimerText
 
 var jumpBuffered = false
 var jumpStartTime = 0.0
@@ -46,7 +48,7 @@ var wasOnWall = false
 var isAttachedToWall = true
 
 enum Ability { CLIMBING, WALL_JUMP }
-enum State { NORMAL, CLIMBING, WALL_JUMPING }
+enum State { NORMAL, CLIMBING, WALL_JUMPING, WALL_JUMP_DECLINE }
 var state = State.NORMAL
 var abilities = [Ability.CLIMBING, Ability.WALL_JUMP]
 
@@ -56,13 +58,17 @@ var checkpoint = Vector2.ZERO
 
 func _ready():
 	checkpoint = global_position
-	wallJumpPauseTimer.timeout.connect(switch_to_normal_state)
+	wallJumpPauseTimer.timeout.connect(active_wall_jump_decline)
+	wallJumpDeclineTimer.timeout.connect(switch_to_normal_state)
 
 func _physics_process(delta):
 	state = get_updated_state()
 	
+	timerText.text = "%0.2f" % wallJumpPauseTimer.time_left
+	#print(state)
+	
 	match state:
-		State.NORMAL,State.WALL_JUMPING:
+		State.NORMAL,State.WALL_JUMPING,State.WALL_JUMP_DECLINE:
 			normal_state(delta)
 		State.CLIMBING:
 			climbing_state(delta)
@@ -82,7 +88,7 @@ func is_near_wall() -> bool:
 func get_updated_state() -> State:
 	isOnWall = is_near_wall()
 	
-	if state == State.WALL_JUMPING:
+	if state == State.WALL_JUMPING || state == State.WALL_JUMP_DECLINE:
 		return state
 	
 	if abilities.has(Ability.CLIMBING):
@@ -120,7 +126,10 @@ func extra_gravity(delta):
 	var currentTime = Time.get_ticks_msec()
 	var timeSinceJump = (currentTime - jumpStartTime) / 1000.0
 	
-	if velocity.y > 0 or state == State.WALL_JUMPING: # If player is falling, apply more gravity
+	if velocity.y > 0 and state == State.WALL_JUMP_DECLINE: # If player is falling, apply more gravity
+		velocity.y += gravity * (fallMultiplier * 6.0) * delta
+		
+	elif velocity.y > 0: # If player is falling, apply more gravity
 		velocity.y += gravity * fallMultiplier * delta
 		
 	elif velocity.y < 0 && !Input.is_action_pressed("jump"): # If player did small jump, apply more gravity
@@ -145,20 +154,17 @@ func handle_jump(delta):
 					facingDir = wallJumpDir
 					velocity.x = facingDir * speed * delta
 					state = State.WALL_JUMPING
-					wallJumpPauseTimer.start()
 					wallJumpPauseTimer.wait_time = wallJumpPauseTime
-					print("wall jump")
+					wallJumpPauseTimer.start()
 					wall_bounce_jump()
 					return
 				elif wallCoyoteTimer.time_left > 0.0:
-					print(-coyoteWallDir)
 					wallJumpDir = -coyoteWallDir
 					facingDir = wallJumpDir
 					velocity.x = facingDir * speed * delta
 					state = State.WALL_JUMPING
-					wallJumpPauseTimer.start()
 					wallJumpPauseTimer.wait_time = wallJumpPauseTime
-					print("coyote")
+					wallJumpPauseTimer.start()
 					wall_bounce_jump()
 					return
 			else:
@@ -194,7 +200,14 @@ func handle_jump(delta):
 			#jumpBuffered = true
 			#get_tree().create_timer(jumpBufferTime).timeout.connect(reset_jump_buffer)
 
+func active_wall_jump_decline():
+	#print("decline")
+	state = State.WALL_JUMP_DECLINE
+	wallJumpDeclineTimer.wait_time = 0.2
+	wallJumpDeclineTimer.start()
+
 func switch_to_normal_state():
+	print("normal")
 	state = State.NORMAL
 
 func jump():
@@ -213,7 +226,7 @@ func wall_bounce_jump():
 		wallJumpTimer.start()
 		
 		jumpStartTime = Time.get_ticks_msec()
-		velocity.y = jumpVelocity * 1.2
+		velocity.y = jumpVelocity * 1.0
 
 func handle_wall_jump():
 	if Input.is_action_just_pressed("jump"):
@@ -236,14 +249,17 @@ func handle_movement(delta):
 	else:
 		wallDirSprite.flip_h = true
 	
-	if state != State.NORMAL and hor_dir != wallJumpDir:
+	if state == State.WALL_JUMPING and hor_dir != wallJumpDir:
 		return
 	
 	if hor_dir:
 		velocity.x = hor_dir * speed * delta
 		facingDir = hor_dir
+		
+		if state == State.WALL_JUMP_DECLINE:
+			velocity.x = velocity.lerp(Vector2.ZERO, 0.4).x
 	else:
-		if state != State.NORMAL and hor_dir != wallJumpDir:
+		if state == State.WALL_JUMPING and hor_dir != wallJumpDir:
 			return
 		
 		# Slows down player, only relevant when additional forces are applied

@@ -117,13 +117,26 @@ wait_time = 0.1
 one_shot = true
 
 [node name="WallJumpPauseTimer" type="Timer" parent="Timers"]
-wait_time = 0.5
+wait_time = 0.15
+one_shot = true
+
+[node name="WallJumpDeclineTimer" type="Timer" parent="Timers"]
+wait_time = 0.2
 one_shot = true
 
 [node name="WallDirSprite" type="Sprite2D" parent="."]
+visible = false
 modulate = Color(0.27451, 1, 0.968627, 1)
 position = Vector2(0, -17.5)
 scale = Vector2(1, 0.25)
 texture = ExtResource("2_nwh2l")
+
+[node name="TimerText" type="RichTextLabel" parent="."]
+offset_left = -23.0
+offset_top = -35.0
+offset_right = 24.0
+offset_bottom = -12.0
+text = "Timer"
+fit_content = true
 
 [connection signal="body_entered" from="Hitbox" to="." method="_on_spiked_entered"]
