@@ -6,8 +6,6 @@ extends CharacterBody2D
 @export var jumpBufferTime = 0.1
 
 @export var wallJumpCooldown = 0.2
-# Time until player resumes control
-@export var wallJumpPauseTime = 0.15
 
 @export var fallMultiplier = 0.4
 @export var lowJumpMultiplier = 0.5
@@ -33,6 +31,7 @@ extends CharacterBody2D
 @onready var timerText = $TimerText
 
 var jumpBuffered = false
+var wallJumpBuffered = false
 var jumpStartTime = 0.0
 var facingDir = 1
 var wallDir = 0
@@ -101,7 +100,7 @@ func normal_state(delta):
 	isOnFloor = is_on_floor() || groundDetector.has_overlapping_bodies()
 	wasOnFloor = isOnFloor
 	wasOnWall = isOnWall
-	#handle_jump_buffer()
+	handle_jump_buffer(delta)
 	handle_jump(delta)
 	handle_movement(delta)
 	update_sprite()
@@ -137,11 +136,15 @@ func extra_gravity(delta):
 			var multiplier = (1 - timeSinceJump) * 3 # Longer jump = more gravity
 			velocity.y += gravity * (lowJumpMultiplier * multiplier) * delta
 
-func handle_jump_buffer():
+func handle_jump_buffer(delta):
 	if isOnFloor or isOnWall:
 		if jumpBuffered:
 			print("buffer jump")
 			jump()
+			return
+	if isOnWall and wallJumpBuffered:
+		print("buffer wall jump")
+		wall_bounce(delta)
 
 # Jumps if on ground, or starts buffer
 # Buffer will jump automatically if player touches ground soon after
@@ -154,7 +157,6 @@ func handle_jump(delta):
 					facingDir = wallJumpDir
 					velocity.x = facingDir * speed * delta
 					state = State.WALL_JUMPING
-					#wallJumpPauseTimer.wait_time = wallJumpPauseTime
 					wallJumpPauseTimer.start()
 					wall_bounce_jump()
 					return
@@ -163,10 +165,12 @@ func handle_jump(delta):
 					facingDir = wallJumpDir
 					velocity.x = facingDir * speed * delta
 					state = State.WALL_JUMPING
-					#wallJumpPauseTimer.wait_time = wallJumpPauseTime
 					wallJumpPauseTimer.start()
 					wall_bounce_jump()
 					return
+				else:
+					wallJumpBuffered = true
+					get_tree().create_timer(jumpBufferTime).timeout.connect(reset_wall_jump_buffer)
 			else:
 				pass
 		
@@ -226,7 +230,15 @@ func wall_bounce_jump():
 		wallJumpTimer.start()
 		
 		jumpStartTime = Time.get_ticks_msec()
-		velocity.y = jumpVelocity * 1.0
+		velocity.y = jumpVelocity
+
+func wall_bounce(delta):
+	wallJumpDir = -wallDir
+	facingDir = wallJumpDir
+	velocity.x = facingDir * speed * delta
+	state = State.WALL_JUMPING
+	wallJumpPauseTimer.start()
+	wall_bounce_jump()
 
 func handle_wall_jump():
 	if Input.is_action_just_pressed("jump"):
@@ -234,6 +246,9 @@ func handle_wall_jump():
 
 func reset_jump_buffer():
 	jumpBuffered = false
+
+func reset_wall_jump_buffer():
+	wallJumpBuffered = false
 
 func update_sprite():
 	if facingDir == 1:
