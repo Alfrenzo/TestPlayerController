@@ -127,7 +127,7 @@ func extra_gravity(delta):
 	var timeSinceJump = (currentTime - jumpStartTime) / 1000.0
 	
 	if velocity.y > 0 and state == State.WALL_JUMP_DECLINE: # If player is falling, apply more gravity
-		velocity.y += gravity * (fallMultiplier * 6.0) * delta
+		velocity.y += gravity * (fallMultiplier) * delta
 		
 	elif velocity.y > 0: # If player is falling, apply more gravity
 		velocity.y += gravity * fallMultiplier * delta
@@ -154,7 +154,7 @@ func handle_jump(delta):
 					facingDir = wallJumpDir
 					velocity.x = facingDir * speed * delta
 					state = State.WALL_JUMPING
-					wallJumpPauseTimer.wait_time = wallJumpPauseTime
+					#wallJumpPauseTimer.wait_time = wallJumpPauseTime
 					wallJumpPauseTimer.start()
 					wall_bounce_jump()
 					return
@@ -163,7 +163,7 @@ func handle_jump(delta):
 					facingDir = wallJumpDir
 					velocity.x = facingDir * speed * delta
 					state = State.WALL_JUMPING
-					wallJumpPauseTimer.wait_time = wallJumpPauseTime
+					#wallJumpPauseTimer.wait_time = wallJumpPauseTime
 					wallJumpPauseTimer.start()
 					wall_bounce_jump()
 					return
@@ -253,11 +253,12 @@ func handle_movement(delta):
 		return
 	
 	if hor_dir:
-		velocity.x = hor_dir * speed * delta
-		facingDir = hor_dir
+		if state != State.WALL_JUMP_DECLINE:
+			velocity.x = hor_dir * speed * delta
+		else:
+			velocity.x = velocity.lerp(Vector2(hor_dir * speed * delta, velocity.y), 0.1).x
 		
-		if state == State.WALL_JUMP_DECLINE:
-			velocity.x = velocity.lerp(Vector2.ZERO, 0.4).x
+		facingDir = hor_dir
 	else:
 		if state == State.WALL_JUMPING and hor_dir != wallJumpDir:
 			return

@@ -132,6 +132,7 @@ scale = Vector2(1, 0.25)
 texture = ExtResource("2_nwh2l")
 
 [node name="TimerText" type="RichTextLabel" parent="."]
+visible = false
 offset_left = -23.0
 offset_top = -35.0
 offset_right = 24.0
