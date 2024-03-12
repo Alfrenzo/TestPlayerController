@@ -26,10 +26,12 @@ position = Vector2(0, 2)
 texture = ExtResource("2_nwh2l")
 
 [node name="Collider" type="CollisionShape2D" parent="."]
+visible = false
 position = Vector2(0, 2.5)
 shape = SubResource("RectangleShape2D_wy7b0")
 
 [node name="GroundDetector" type="Area2D" parent="."]
+visible = false
 collision_mask = 2
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="GroundDetector"]
@@ -76,6 +78,7 @@ target_position = Vector2(-1, 0)
 collision_mask = 2
 
 [node name="WallDetectors" type="Control" parent="."]
+visible = false
 layout_mode = 3
 anchors_preset = 0
 offset_right = 40.0
@@ -122,5 +125,8 @@ one_shot = true
 [node name="WallJumpDeclineTimer" type="Timer" parent="Timers"]
 wait_time = 0.2
 one_shot = true
+
+[node name="GhostTimer" type="Timer" parent="Timers"]
+wait_time = 0.05
 
 [connection signal="body_entered" from="Hitbox" to="." method="_on_spiked_entered"]

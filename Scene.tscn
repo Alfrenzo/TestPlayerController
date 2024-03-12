@@ -76,3 +76,30 @@ zoom = Vector2(3.5, 3.5)
 tile_set = SubResource("TileSet_qc5r8")
 format = 2
 layer_0/tile_data = PackedInt32Array(-65522, 0, 0, -65521, 0, 0, -65520, 0, 0, -65519, 0, 0, -65516, 0, 0, -65515, 0, 0, -65514, 0, 0, -65513, 0, 0, -65512, 0, 0, -65511, 0, 0, -65508, 0, 0, -65507, 0, 0, -65506, 0, 0, -65505, 0, 0, -65504, 0, 0, -65503, 0, 0, -65502, 0, 0, -65501, 0, 0, -65498, 0, 0, -65497, 0, 0, -65496, 0, 0, -65495, 0, 0, -65494, 0, 0, -65493, 0, 0, -65492, 0, 0, -65491, 0, 0, -65490, 0, 0, -65489, 0, 0)
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="ClimbButton" type="CheckButton" parent="CanvasLayer"]
+offset_top = 1.0
+offset_right = 93.0
+offset_bottom = 32.0
+focus_mode = 0
+text = "Climb"
+
+[node name="WallJumpButton" type="CheckButton" parent="CanvasLayer"]
+offset_top = 26.0
+offset_right = 126.0
+offset_bottom = 57.0
+focus_mode = 0
+text = "Wall Jump"
+
+[node name="DashButton" type="CheckButton" parent="CanvasLayer"]
+offset_top = 52.0
+offset_right = 87.0
+offset_bottom = 83.0
+focus_mode = 0
+text = "Dash"
+
+[connection signal="toggled" from="CanvasLayer/ClimbButton" to="Player" method="_on_climb_button_toggled"]
+[connection signal="toggled" from="CanvasLayer/WallJumpButton" to="Player" method="_on_wall_jump_button_toggled"]
+[connection signal="toggled" from="CanvasLayer/DashButton" to="Player" method="_on_dash_button_toggled"]

@@ -19,6 +19,7 @@ extends CharacterBody2D
 @onready var wallJumpTimer = $Timers/WallJumpTimer
 @onready var wallJumpPauseTimer = $Timers/WallJumpPauseTimer
 @onready var wallJumpDeclineTimer = $Timers/WallJumpDeclineTimer
+@onready var ghostTimer = $Timers/GhostTimer
 @onready var groundDetector = $GroundDetector
 @onready var wallDetectorRight = $WallDetectors/WallDetectorRight
 @onready var wallDetectorLeft = $WallDetectors/WallDetectorLeft
@@ -52,8 +53,9 @@ var isAttachedToWall = true
 enum Ability { CLIMBING, WALL_JUMP, DASH }
 enum State { NORMAL, CLIMBING, WALL_JUMPING, WALL_JUMP_DECLINE }
 var state = State.NORMAL
-var abilities = [Ability.CLIMBING, Ability.WALL_JUMP, Ability.DASH]
+var abilities = []
 
+var ghost_scene = preload("res://GhostScene.tscn")
 var gravity = ProjectSettings.get_setting("physics/2d/default_gravity")
 var checkpoint = Vector2.ZERO
 
@@ -62,6 +64,7 @@ func _ready():
 	checkpoint = global_position
 	wallJumpPauseTimer.timeout.connect(active_wall_jump_decline)
 	wallJumpDeclineTimer.timeout.connect(switch_to_normal_state)
+	ghostTimer.timeout.connect(on_ghost_timer_timeout)
 
 func _physics_process(delta):
 	state = get_updated_state()
@@ -138,7 +141,7 @@ func extra_gravity(delta):
 			velocity.y += gravity * (lowJumpMultiplier * multiplier) * delta
 
 func handle_buffers():
-	if isOnFloor or isOnWall:
+	if isOnFloor or (state == State.CLIMBING and isOnWall):
 		if jumpBuffered:
 			jump()
 	if isOnFloor:
@@ -150,13 +153,13 @@ func handle_dash(delta):
 		var currentTime = Time.get_ticks_msec()
 		var dashElapTime = (currentTime - dashStartTime) / 1000.0
 		
-		if dashElapTime < 0.1:
+		if dashElapTime < 0.15:
 			var vel = dashDir.normalized() * Vector2(dashDistance, dashDistance / 1.8)
 			vel /= 10
 			velocity = vel
 		else:
 			isDashing = false
-			#ghostTimer.stop()
+			ghostTimer.stop()
 		return
 	
 	if isOnFloor:
@@ -170,12 +173,25 @@ func handle_dash(delta):
 			get_tree().create_timer(jumpBufferTime).timeout.connect(reset_dash_buffer)
 
 func dash():
-	#ghostTimer.start()
-	#instance_ghost()
+	ghostTimer.start()
+	instance_ghost()
 	dashDir = Vector2(Input.get_axis("move_left", "move_right"),Input.get_axis("move_up", "move_down"))
 	dashAvailable = false
 	isDashing = true
 	dashStartTime = Time.get_ticks_msec()
+
+func instance_ghost():
+	var ghost: Sprite2D = ghost_scene.instantiate()
+	get_tree().root.add_child(ghost)
+	
+	#ghost.position = sprite.position
+	ghost.global_position = global_position + sprite.position
+	ghost.texture = sprite.texture
+	ghost.flip_h = sprite.flip_h
+
+# Ran multiple times throughout dash
+func on_ghost_timer_timeout():
+	instance_ghost()
 
 func reset_dash_buffer():
 	dashBuffered = false
@@ -329,3 +345,28 @@ func attach_to_wall():
 		velocity.x = facingDir * speed
 	else:
 		velocity.x = 0
+
+# Enable/disable ability test buttons
+func _on_climb_button_toggled(toggled_on):
+	var index = abilities.find(Ability.CLIMBING)
+	if index != -1:
+		abilities.remove_at(index)
+	
+	if toggled_on:
+		abilities.append(Ability.CLIMBING)
+
+func _on_wall_jump_button_toggled(toggled_on):
+	var index = abilities.find(Ability.WALL_JUMP)
+	if index != -1:
+		abilities.remove_at(index)
+	
+	if toggled_on:
+		abilities.append(Ability.WALL_JUMP)
+
+func _on_dash_button_toggled(toggled_on):
+	var index = abilities.find(Ability.DASH)
+	if index != -1:
+		abilities.remove_at(index)
+	
+	if toggled_on:
+		abilities.append(Ability.DASH)
