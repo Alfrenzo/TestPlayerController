@@ -27,9 +27,6 @@ extends CharacterBody2D
 @onready var bottomLeftCast = $NudgeCasts/BottomLeftCast
 @onready var topLeftCast = $NudgeCasts/TopLeftCast
 
-@onready var wallDirSprite = $WallDirSprite
-@onready var timerText = $TimerText
-
 var jumpBuffered = false
 var jumpStartTime = 0.0
 var facingDir = 1
@@ -61,9 +58,6 @@ func _ready():
 
 func _physics_process(delta):
 	state = get_updated_state()
-	
-	timerText.text = "%0.2f" % wallJumpPauseTimer.time_left
-	#print(state)
 	
 	match state:
 		State.NORMAL,State.WALL_JUMPING,State.WALL_JUMP_DECLINE:
@@ -216,11 +210,6 @@ func update_sprite():
 func handle_movement(delta):
 	var hor_dir = Input.get_axis("move_left", "move_right")
 	
-	if wallJumpDir == 1:
-		wallDirSprite.flip_h = false
-	else:
-		wallDirSprite.flip_h = true
-	
 	if state == State.WALL_JUMPING and hor_dir != wallJumpDir:
 		return
 	
@@ -235,7 +224,7 @@ func handle_movement(delta):
 		if state == State.WALL_JUMPING and hor_dir != wallJumpDir:
 			return
 		
-		# Slows down player, only relevant when additional forces are applied
+		# Slows down player, only noticable when additional forces are applied
 		velocity.x = move_toward(velocity.x, 0, speed * delta)
 
 func handle_wall_movement(delta):
