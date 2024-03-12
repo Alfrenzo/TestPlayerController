@@ -34,6 +34,13 @@ var wallDir = 0
 var wallJumpDir = 0
 var coyoteWallDir = 0
 
+var dashBuffered = false
+var dashAvailable = false
+var isDashing = false
+var dashStartTime = 0.0
+var dashDir = Vector2.ZERO
+var dashDistance = 5000.0
+
 var isTouchingWall = false
 var isGrabbingWall = false
 var isOnFloor = false
@@ -42,10 +49,10 @@ var isOnWall = false
 var wasOnWall = false
 var isAttachedToWall = true
 
-enum Ability { CLIMBING, WALL_JUMP }
+enum Ability { CLIMBING, WALL_JUMP, DASH }
 enum State { NORMAL, CLIMBING, WALL_JUMPING, WALL_JUMP_DECLINE }
 var state = State.NORMAL
-var abilities = [Ability.CLIMBING, Ability.WALL_JUMP]
+var abilities = [Ability.CLIMBING, Ability.WALL_JUMP, Ability.DASH]
 
 var gravity = ProjectSettings.get_setting("physics/2d/default_gravity")
 var checkpoint = Vector2.ZERO
@@ -93,9 +100,10 @@ func normal_state(delta):
 	isOnFloor = is_on_floor() || groundDetector.has_overlapping_bodies()
 	wasOnFloor = isOnFloor
 	wasOnWall = isOnWall
-	handle_jump_buffer()
+	handle_buffers()
 	handle_jump(delta)
 	handle_movement(delta)
+	handle_dash(delta)
 	update_sprite()
 	
 	extra_gravity(delta)
@@ -129,11 +137,48 @@ func extra_gravity(delta):
 			var multiplier = (1 - timeSinceJump) * 3 # Longer jump = more gravity
 			velocity.y += gravity * (lowJumpMultiplier * multiplier) * delta
 
-func handle_jump_buffer():
+func handle_buffers():
 	if isOnFloor or isOnWall:
 		if jumpBuffered:
 			jump()
-			return
+	if isOnFloor:
+		if dashBuffered:
+			dash()
+
+func handle_dash(delta):
+	if isDashing:
+		var currentTime = Time.get_ticks_msec()
+		var dashElapTime = (currentTime - dashStartTime) / 1000.0
+		
+		if dashElapTime < 0.1:
+			var vel = dashDir.normalized() * Vector2(dashDistance, dashDistance / 1.8)
+			vel /= 10
+			velocity = vel
+		else:
+			isDashing = false
+			#ghostTimer.stop()
+		return
+	
+	if isOnFloor:
+		dashAvailable = true
+	
+	if abilities.has(Ability.DASH) and Input.is_action_just_pressed("dash"):
+		if dashAvailable:
+			dash()
+		else:
+			dashBuffered = true
+			get_tree().create_timer(jumpBufferTime).timeout.connect(reset_dash_buffer)
+
+func dash():
+	#ghostTimer.start()
+	#instance_ghost()
+	dashDir = Vector2(Input.get_axis("move_left", "move_right"),Input.get_axis("move_up", "move_down"))
+	dashAvailable = false
+	isDashing = true
+	dashStartTime = Time.get_ticks_msec()
+
+func reset_dash_buffer():
+	dashBuffered = false
 
 # Jumps if on ground or has coyote time
 # Wall jumps if on wall or has coyote time
@@ -174,7 +219,6 @@ func handle_jump(delta):
 
 func active_wall_jump_decline():
 	state = State.WALL_JUMP_DECLINE
-	wallJumpDeclineTimer.wait_time = 0.2
 	wallJumpDeclineTimer.start()
 
 func switch_to_normal_state():
